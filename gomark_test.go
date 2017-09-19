@@ -2,6 +2,7 @@ package gomark_test
 
 import (
 	"github.com/th3osmith/gomark"
+	"os"
 	"reflect"
 	"testing"
 )
@@ -39,9 +40,25 @@ func TestBookmark(t *testing.T) {
 	}
 }
 
+func TestDatabaseFromFile(t *testing.T) {
+
+	emptyPath := os.TempDir() + "/db.json"
+	emptyFile, _ := os.Create(emptyPath)
+	emptyFile.Close()
+
+	_, err := gomark.NewDatabaseFromFile(emptyPath)
+
+	if err != nil {
+		t.Error("Empty file not handled")
+
+	}
+
+}
+
 func TestDatabase(t *testing.T) {
 
 	d := gomark.NewDatabase()
+	d.Filename = "/tmp/dump.json"
 	b, _ := gomark.NewBookmarkUrl("http://google.com")
 
 	b.AddTags("TATA", "Yoyo")
@@ -52,7 +69,7 @@ func TestDatabase(t *testing.T) {
 		t.Errorf("Error while adding bookmark")
 	}
 
-	err := d.Dump("/tmp/dump.json")
+	err := d.Dump()
 	if err != nil {
 		t.Errorf("Error while dumping to JSON: %s", err)
 	}
@@ -64,6 +81,11 @@ func TestDatabase(t *testing.T) {
 
 	if !reflect.DeepEqual(d, d1) {
 		t.Errorf("Error after loading from JSON, databases not identical: %s, %s", d, d1)
+	}
+
+	_, err = d.GetBookmark("http://google.coma")
+	if err == nil {
+		t.Error("Bad error reporting in getBookmark")
 	}
 
 	d.DeleteBookmark(b)
