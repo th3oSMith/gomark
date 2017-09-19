@@ -14,6 +14,8 @@ import (
 	"time"
 )
 
+var YoutubeKey string
+
 type Database struct {
 	Bookmarks map[string]Bookmark
 	Filename  string
@@ -159,6 +161,68 @@ func NewBookmark() *Bookmark {
 }
 
 func GetTitle(theUrl *url.URL) (title string, err error) {
+
+	if YoutubeKey != "" && theUrl.Hostname() == "www.youtube.com" {
+		return GetTitleYoutube(theUrl)
+	}
+
+	return GetTitleGeneric(theUrl)
+}
+
+func GetTitleYoutube(theUrl *url.URL) (title string, err error) {
+
+	videoId, err := getParam(theUrl.Query(), "v")
+	if err != nil {
+		return
+	}
+
+	apiUrl := fmt.Sprintf("https://www.googleapis.com/youtube/v3/videos?id=%s&key=%s&part=snippet", videoId, YoutubeKey)
+
+	resp, err := http.Get(apiUrl)
+	if err != nil {
+		return
+	}
+
+	type snippet struct {
+		Title        string `json:"title"`
+		ChannelTitle string `json:"channelTitle"`
+	}
+
+	type item struct {
+		Snippet snippet `json:"snippet"`
+	}
+
+	type respStruct struct {
+		PageInfo map[string]int `json:"pageInfo"`
+		Items    []item         `json:"items"`
+	}
+
+	var data respStruct
+
+	err = json.NewDecoder(resp.Body).Decode(&data)
+	if err != nil {
+		return
+	}
+
+	video := data.Items[0].Snippet
+	title = fmt.Sprintf("%s: %s", video.ChannelTitle, video.Title)
+
+	return
+}
+
+func getParam(values url.Values, name string) (value string, err error) {
+
+	tmp, ok := values[name]
+	if !ok {
+		err = fmt.Errorf("Param %s not found", name)
+		return
+	}
+
+	value = tmp[0]
+	return
+}
+
+func GetTitleGeneric(theUrl *url.URL) (title string, err error) {
 
 	rawUrl := theUrl.String()
 	client := &http.Client{}

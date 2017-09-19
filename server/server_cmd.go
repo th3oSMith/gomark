@@ -17,6 +17,7 @@ type config struct {
 	DbFile      string
 	Username    string
 	Password    string
+	YoutubeKey  string
 }
 
 func getDefaultConfig() config {
@@ -26,6 +27,7 @@ func getDefaultConfig() config {
 		"",
 		"",
 		3000,
+		"",
 		"",
 		"",
 		"",
@@ -92,6 +94,10 @@ func main() {
 		CertificateFile: c.Certificate,
 		KeyFile:         c.Key,
 		Authenticator:   auth,
+	}
+
+	if c.YoutubeKey != "" {
+		gomark.YoutubeKey = c.YoutubeKey
 	}
 
 	fmt.Printf("Gomark Sever starting on port %v\n", c.Port)
