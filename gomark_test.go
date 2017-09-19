@@ -38,6 +38,17 @@ func TestBookmark(t *testing.T) {
 	if b.Title != "Google" {
 		t.Errorf("Error fetching the title: got %s, expected Google", b.Title)
 	}
+
+	// Test Youtube
+	b, err = gomark.NewBookmarkUrl("https://www.youtube.com/watch?v=SDnLtJaUp1c")
+	if err != nil {
+		t.Errorf("Error while creating bookmark for the youtube Test: %v", err)
+	}
+
+	if b.Title != "Logo Pixel Art. - YouTube" {
+		t.Errorf("Error fetching the title: got %s, expected: Logo Pixel Art. - YouTube", b.Title)
+	}
+
 }
 
 func TestDatabaseFromFile(t *testing.T) {

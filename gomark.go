@@ -160,6 +160,61 @@ func NewBookmark() *Bookmark {
 	return b
 }
 
+func GetTitle(theUrl *url.URL) (title string, err error) {
+
+	rawUrl := theUrl.String()
+	client := &http.Client{}
+
+	req, err := http.NewRequest("GET", rawUrl, nil)
+	if err != nil {
+		err = fmt.Errorf("Error while creating the request for the page %s: %v", rawUrl, err)
+		return
+	}
+
+	// User Wget User Agent gets better result with Youtube
+	req.Header.Set("User-Agent", "Wget/1.19.1 (linux-gnu)")
+
+	res, err := client.Do(req)
+	if err != nil {
+		err = fmt.Errorf("Error while getting the page %s: %v", rawUrl, err)
+		return
+	}
+
+	// Getting the title
+	head := make([]byte, 2000)
+	_, err = res.Body.Read(head)
+
+	if err != nil && err != io.EOF {
+		// As parsing the title is non mandatory no error is returned
+		err = fmt.Errorf("Error while reading the page %s: %v", rawUrl, err)
+		return
+	}
+
+	re := regexp.MustCompile("(?s)<title.*?>(.+)</title>")
+	matches := re.FindStringSubmatch(string(head))
+
+	if len(matches) == 0 {
+		rest, erra := ioutil.ReadAll(res.Body)
+
+		if erra != nil && erra != io.EOF {
+			err = fmt.Errorf("Error while reading the full page %s: %v", rawUrl, erra)
+			return
+		}
+
+		bodyText := append(head, rest...)
+		matches = re.FindStringSubmatch(string(bodyText))
+	}
+
+	if len(matches) == 0 {
+		err = fmt.Errorf("No Title Found")
+		return
+	}
+
+	title = matches[1]
+	return
+
+}
+
 func NewBookmarkUrl(rawUrl string) (*Bookmark, error) {
 
 	tmp, err := url.Parse(rawUrl)
@@ -172,45 +227,13 @@ func NewBookmarkUrl(rawUrl string) (*Bookmark, error) {
 	b.info.Url = *tmp
 	b.RawUrl = rawUrl
 
-	res, err := http.Get(rawUrl)
-
+	title, err := GetTitle(tmp)
 	if err != nil {
-		// As parsing the title is non mandatory no error is returned
-		log.Printf("Error while getting the page %s: %s", rawUrl, err.Error())
-		return b, nil
-	}
-
-	// Getting the title
-	head := make([]byte, 2000)
-	_, err = res.Body.Read(head)
-
-	if err != nil && err != io.EOF {
-		// As parsing the title is non mandatory no error is returned
-		log.Printf("Error while reading the page %s: %s", rawUrl, err.Error())
-		return b, nil
-	}
-
-	re := regexp.MustCompile("(?s)<title.*?>(.+)</title>")
-	matches := re.FindStringSubmatch(string(head))
-
-	if len(matches) == 0 {
-		rest, err := ioutil.ReadAll(res.Body)
-
-		if err != nil && err != io.EOF {
-			// As parsing the title is non mandatory no error is returned
-			log.Printf("Error while reading the full page %s: %s", rawUrl, err.Error())
-			return b, nil
-		}
-
-		bodyText := append(head, rest...)
-		matches = re.FindStringSubmatch(string(bodyText))
-	}
-
-	if len(matches) == 0 {
 		b.Title = b.RawUrl
-		return b, nil
+		log.Printf("Impossible to retrieve title for url %s: %v", b.RawUrl, err)
+	} else {
+		b.Title = title
 	}
-	b.Title = matches[1]
 
 	return b, nil
 
