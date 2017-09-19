@@ -108,8 +108,6 @@ func (d Bookmark) MarshalJSON() ([]byte, error) {
 	// and MarshalJSON would be call infinitely
 	type alias Bookmark
 
-	fmt.Println(d.GetTags())
-
 	return json.Marshal(&struct {
 		Url  string
 		Tags []string
