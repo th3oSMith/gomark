@@ -70,7 +70,7 @@ func NewDatabaseFromFile(filename string) (d *Database, err error) {
 
 	// If the file is empty just return a new DB
 	if len(b) == 0 {
-		return NewDatabase(), nil
+		return
 	}
 
 	err = json.Unmarshal(b, d)

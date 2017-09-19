@@ -42,7 +42,10 @@ func (h bookmarkHandler) Create(m pure.PureReq, rw pure.ResponseWriter) {
 	rww.AddValue("result", result)
 
 	rww.AddLogMsg(pure.Info, 200, fmt.Sprintf("Created Bookmark for %s", data.Url))
-	h.database.Dump()
+	err = h.database.Dump()
+	if err != nil {
+		rww.AddLogMsg(pure.Error, 500, fmt.Sprintf("Impossible to Dump DB"))
+	}
 
 	return
 }
@@ -85,7 +88,10 @@ func (h bookmarkHandler) Update(m pure.PureReq, rw pure.ResponseWriter) {
 	rww.AddValue("result", result)
 
 	rww.AddLogMsg(pure.Info, 200, fmt.Sprintf("Updated Bookmark for %s", data.Url))
-	h.database.Dump()
+	err = h.database.Dump()
+	if err != nil {
+		rww.AddLogMsg(pure.Error, 500, fmt.Sprintf("Impossible to Dump DB"))
+	}
 
 	return
 }
@@ -112,7 +118,10 @@ func (h bookmarkHandler) Delete(m pure.PureReq, rw pure.ResponseWriter) {
 	rww.AddValue("result", result)
 
 	rww.AddLogMsg(pure.Info, 200, fmt.Sprintf("Deleted Bookmark for %s", url))
-	h.database.Dump()
+	err = h.database.Dump()
+	if err != nil {
+		rww.AddLogMsg(pure.Error, 500, fmt.Sprintf("Impossible to Dump DB"))
+	}
 
 	return
 
