@@ -163,7 +163,12 @@ func NewBookmark() *Bookmark {
 func GetTitle(theUrl *url.URL) (title string, err error) {
 
 	if YoutubeKey != "" && theUrl.Hostname() == "www.youtube.com" {
-		return GetTitleYoutube(theUrl)
+		title, err = GetTitleYoutube(theUrl)
+		if err != nil {
+			log.Printf("Failed to use the youtube API: %s", err)
+		} else {
+			return
+		}
 	}
 
 	return GetTitleGeneric(theUrl)
@@ -192,9 +197,16 @@ func GetTitleYoutube(theUrl *url.URL) (title string, err error) {
 		Snippet snippet `json:"snippet"`
 	}
 
+	type ErrorResponse struct {
+		Errors  []map[string]string `json:"errors"`
+		Code    int                 `json:"code"`
+		Message string              `json:"message"`
+	}
+
 	type respStruct struct {
 		PageInfo map[string]int `json:"pageInfo"`
 		Items    []item         `json:"items"`
+		Error    ErrorResponse  `json:"error"`
 	}
 
 	var data respStruct
@@ -202,6 +214,11 @@ func GetTitleYoutube(theUrl *url.URL) (title string, err error) {
 	err = json.NewDecoder(resp.Body).Decode(&data)
 	if err != nil {
 		return
+	}
+
+	if data.Error.Code != 0 {
+		fmt.Println("Error")
+		return "", fmt.Errorf("Impossimple to Retrieve Youtube Data: %s", data.Error.Message)
 	}
 
 	video := data.Items[0].Snippet
