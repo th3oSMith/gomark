@@ -14,6 +14,7 @@ type config struct {
 	Certificate string
 	Key         string
 	Port        int
+	Host        string
 	DbFile      string
 	Username    string
 	Password    string
@@ -27,6 +28,7 @@ func getDefaultConfig() config {
 		"",
 		"",
 		3000,
+		"127.0.0.1",
 		"",
 		"",
 		"",
@@ -101,7 +103,7 @@ func main() {
 	}
 
 	fmt.Printf("Gomark Sever starting on port %v\n", c.Port)
-	gomark.ServeHttp(db, &server, c.Port, config)
+	gomark.ServeHttp(db, &server, c.Host, c.Port, config)
 
 }
 

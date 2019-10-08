@@ -221,7 +221,7 @@ type Authenticator interface {
 	CheckCredentials(username string, password string) bool
 }
 
-func ServeHttp(db *Database, server *Server, port int, config HttpConfig) {
+func ServeHttp(db *Database, server *Server, host string, port int, config HttpConfig) {
 
 	Serve(db, server, config.Authenticator)
 
@@ -230,9 +230,9 @@ func ServeHttp(db *Database, server *Server, port int, config HttpConfig) {
 	var err error
 
 	if config.UseTLS {
-		err = http.ListenAndServeTLS(fmt.Sprintf(":%v", port), config.CertificateFile, config.KeyFile, nil)
+		err = http.ListenAndServeTLS(fmt.Sprintf("%s:%v", host, port), config.CertificateFile, config.KeyFile, nil)
 	} else {
-		err = http.ListenAndServe(fmt.Sprintf(":%v", port), nil)
+		err = http.ListenAndServe(fmt.Sprintf("%s:%v", host, port), nil)
 	}
 
 	log.Fatal(err)
